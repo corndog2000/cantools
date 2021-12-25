@@ -68,7 +68,6 @@ extern "C" {{
 {choices_defines}
 
 {structs}
-{declarations}
 
 #ifdef __cplusplus
 }}
@@ -339,17 +338,30 @@ ENCODE_DECODE_MEMBERS_FMT = '''\
     /**
     * Encode member
     */
-    {type_name} {signal_name}_encode(double value);
+    {type_name} {signal_name}_encode_t(double value);
 
     /**
     * Decode member
     */
-    double {signal_name}_decode({type_name} value);
+    double {signal_name}_decode_t({type_name} value);
 
     /**
     * Is in range member
     */
-    bool {signal_name}_is_in_range({type_name} value);
+    bool {signal_name}_is_in_range_t({type_name} value);
+
+'''
+
+PACK_UNPACK_MEMEBERS_FMT = '''\
+    /**
+    * Pack member
+    */
+    int pack(uint8_t *dst_p, size_t size);
+    
+    /**
+    * Unpack member
+    */
+    int unpack(const uint8_t *dst_p, size_t size);
 '''
 
 DECLARATION_FMT = '''\
@@ -362,9 +374,8 @@ DECLARATION_FMT = '''\
  *
  * @return Size of packed data, or negative error code.
  */
-int {database_name}_{message_name}::pack(
+int {database_name}_{message_name}_t::pack(
     uint8_t *dst_p,
-    const struct {database_name}_{message_name}_t *src_p,
     size_t size);
 
 /**
@@ -376,8 +387,7 @@ int {database_name}_{message_name}::pack(
  *
  * @return zero(0) or negative error code.
  */
-int {database_name}_{message_name}::unpack(
-    struct {database_name}_{message_name}_t *dst_p,
+int {database_name}_{message_name}_t::unpack(
     const uint8_t *src_p,
     size_t size);
 '''
@@ -390,7 +400,7 @@ SIGNAL_DECLARATION_ENCODE_DECODE_FMT = '''\
  *
  * @return Encoded signal.
  */
-{type_name} {database_name}_{message_name}::{signal_name}_encode(double value);
+{type_name} {database_name}_{message_name}_t::{signal_name}_encode_t(double value);
 
 /**
  * Decode given signal by applying scaling and offset.
@@ -399,7 +409,7 @@ SIGNAL_DECLARATION_ENCODE_DECODE_FMT = '''\
  *
  * @return Decoded signal.
  */
-double {database_name}_{message_name}::{signal_name}_decode({type_name} value);
+double {database_name}_{message_name}_t::{signal_name}_decode_t({type_name} value);
 
 '''
 
@@ -411,7 +421,7 @@ SIGNAL_DECLARATION_IS_IN_RANGE_FMT = '''\
  *
  * @return true if in range, false otherwise.
  */
-bool {database_name}_{message_name}::{signal_name}_is_in_range({type_name} value);
+bool {database_name}_{message_name}_t::{signal_name}_is_in_range_t({type_name} value);
 '''
 
 PACK_HELPER_LEFT_SHIFT_FMT = '''\
@@ -455,13 +465,11 @@ static inline {var_type} unpack_right_shift_u{length}(
 '''
 
 DEFINITION_FMT = '''\
-int {database_name}_{message_name}::pack(
+int {database_name}_{message_name}_t::pack(
     uint8_t *dst_p,
-    const struct {database_name}_{message_name}_t *src_p,
     size_t size)
 {{
-{pack_unused}\
-{pack_variables}\
+
     if (size < {message_length}u) {{
         return (-EINVAL);
     }}
@@ -471,13 +479,11 @@ int {database_name}_{message_name}::pack(
     return ({message_length});
 }}
 
-int {database_name}_{message_name}::unpack(
-    struct {database_name}_{message_name}_t *dst_p,
+int {database_name}_{message_name}_t::unpack(
     const uint8_t *src_p,
     size_t size)
 {{
-{unpack_unused}\
-{unpack_variables}\
+
     if (size < {message_length}u) {{
         return (-EINVAL);
     }}
@@ -487,12 +493,12 @@ int {database_name}_{message_name}::unpack(
 '''
 
 SIGNAL_DEFINITION_ENCODE_DECODE_FMT = '''\
-{type_name} {database_name}_{message_name}::{signal_name}_encode(double value)
+{type_name} {database_name}_{message_name}_t::{signal_name}_encode_t(double value)
 {{
     return ({type_name})({encode});
 }}
 
-double {database_name}_{message_name}::{signal_name}_decode({type_name} value)
+double {database_name}_{message_name}_t::{signal_name}_decode_t({type_name} value)
 {{
     return ({decode});
 }}
@@ -500,7 +506,7 @@ double {database_name}_{message_name}::{signal_name}_decode({type_name} value)
 '''
 
 SIGNAL_DEFINITION_IS_IN_RANGE_FMT = '''\
-bool {database_name}_{message_name}::{signal_name}_is_in_range({type_name} value)
+bool {database_name}_{message_name}_t::{signal_name}_is_in_range_t({type_name} value)
 {{
 {unused}\
     return ({check});
@@ -508,9 +514,8 @@ bool {database_name}_{message_name}::{signal_name}_is_in_range({type_name} value
 '''
 
 EMPTY_DEFINITION_FMT = '''\
-int {database_name}_{message_name}::pack(
+int {database_name}_{message_name}_t::pack(
     uint8_t *dst_p,
-    const struct {database_name}_{message_name}_t *src_p,
     size_t size)
 {{
     (void)dst_p;
@@ -520,8 +525,7 @@ int {database_name}_{message_name}::pack(
     return (0);
 }}
 
-int {database_name}_{message_name}::unpack(
-    struct {database_name}_{message_name}_t *dst_p,
+int {database_name}_{message_name}_t::unpack(
     const uint8_t *src_p,
     size_t size)
 {{
@@ -890,10 +894,14 @@ def _format_pack_code_mux(message,
     multiplexed_signals_per_id = sorted(list(multiplexed_signals.items()))
     signal_name = camel_to_snake_case(signal_name)
 
+    '''
     lines = [
         '',
         'switch (src_p->{}) {{'.format(signal_name)
     ]
+    '''
+
+    lines = ['']
 
     for multiplexer_id, multiplexed_signals in multiplexed_signals_per_id:
         body_lines = _format_pack_code_level(message,
@@ -927,7 +935,7 @@ def _format_pack_code_signal(message,
     if signal.is_float or signal.is_signed:
         variable = '    uint{}_t {};'.format(signal.type_length,
                                              signal.snake_name)
-
+        '''
         if signal.is_float:
             conversion = '    memcpy(&{0}, &src_p->{0}, sizeof({0}));'.format(
                 signal.snake_name)
@@ -935,10 +943,11 @@ def _format_pack_code_signal(message,
             conversion = '    {0} = (uint{1}_t)src_p->{0};'.format(
                 signal.snake_name,
                 signal.type_length)
+        '''
 
         variable_lines.append(variable)
-        body_lines.append(conversion)
-
+        #body_lines.append(conversion)
+    '''
     for index, shift, shift_direction, mask in signal.segments(invert_shift=False):
         if signal.is_float or signal.is_signed:
             fmt = '    dst_p[{}] |= pack_{}_shift_u{}({}, {}u, 0x{:02x}u);'
@@ -953,6 +962,7 @@ def _format_pack_code_signal(message,
                           mask)
         body_lines.append(line)
         helper_kinds.add((shift_direction, signal.type_length))
+    '''
 
 
 def _format_pack_code_level(message,
@@ -1052,7 +1062,7 @@ def _format_unpack_code_signal(message,
         variable_lines.append(variable)
 
     segments = signal.segments(invert_shift=True)
-
+    '''
     for i, (index, shift, shift_direction, mask) in enumerate(segments):
         if signal.is_float or signal.is_signed:
             fmt = '    {} {} unpack_{}_shift_u{}(src_p[{}], {}u, 0x{:02x}u);'
@@ -1087,7 +1097,7 @@ def _format_unpack_code_signal(message,
         conversion = '    dst_p->{0} = (int{1}_t){0};'.format(signal.snake_name,
                                                               signal.type_length)
         body_lines.append(conversion)
-
+    '''
 
 def _format_unpack_code_level(message,
                               signal_names,
@@ -1354,9 +1364,12 @@ def _generate_structs(database_name, messages, bit_fields):
                               database_name=database_name,
                               members='\n\n'.join(members)))
         
+        # Joe Code
         for signal in message.signals:
             structs.append(ENCODE_DECODE_MEMBERS_FMT.format(type_name = signal.type_name,
                                                         signal_name = signal.snake_name))
+        structs.append(PACK_UNPACK_MEMEBERS_FMT)
+            
         structs.append('};')
 
     return '\n'.join(structs)
@@ -1364,11 +1377,11 @@ def _generate_structs(database_name, messages, bit_fields):
 
 def _generate_declarations(database_name, messages, floating_point_numbers):
     declarations = []
-
+    
     for message in messages:
         signal_declarations = []
 
-        '''
+        
         for signal in message.signals:
             signal_declaration = ''
 
@@ -1389,12 +1402,12 @@ def _generate_declarations(database_name, messages, floating_point_numbers):
             
 
             signal_declarations.append(signal_declaration)
-        '''
+        
 
         declaration = DECLARATION_FMT.format(database_name=database_name,
                                              database_message_name=message.name,
                                              message_name=message.snake_name)
-
+        
         if signal_declarations:
             declaration += '\n' + '\n'.join(signal_declarations)
 
@@ -1410,7 +1423,7 @@ def _generate_definitions(database_name, messages, floating_point_numbers):
 
     for message in messages:
         signal_definitions = []
-
+        
         for signal, (encode, decode), check in zip(message.signals,
                                                    _generate_encode_decode(message),
                                                    _generate_is_in_range(message)):
@@ -1420,7 +1433,7 @@ def _generate_definitions(database_name, messages, floating_point_numbers):
                 unused = ''
 
             signal_definition = ''
-
+            
             if floating_point_numbers:
                 signal_definition = SIGNAL_DEFINITION_ENCODE_DECODE_FMT.format(
                     database_name=database_name,
@@ -1437,9 +1450,9 @@ def _generate_definitions(database_name, messages, floating_point_numbers):
                 type_name=signal.type_name,
                 unused=unused,
                 check=check)
-
+            
             signal_definitions.append(signal_definition)
-
+        
         if message.length > 0:
             pack_variables, pack_body = _format_pack_code(message,
                                                           pack_helper_kinds)
@@ -1586,9 +1599,7 @@ def generate(database,
         messages)
     choices_defines = _generate_choices_defines(database_name, messages)
     structs = _generate_structs(database_name, messages, bit_fields)
-    declarations = _generate_declarations(database_name,
-                                          messages,
-                                          floating_point_numbers)
+    
     definitions, helper_kinds = _generate_definitions(database_name,
                                                       messages,
                                                       floating_point_numbers)
@@ -1602,8 +1613,7 @@ def generate(database,
                                is_extended_frame_defines=is_extended_frame_defines,
                                frame_cycle_time_defines=frame_cycle_time_defines,
                                choices_defines=choices_defines,
-                               structs=structs,
-                               declarations=declarations)
+                               structs=structs)
 
     source = SOURCE_FMT.format(version=__version__,
                                date=date,
