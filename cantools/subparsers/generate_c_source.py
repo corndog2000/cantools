@@ -20,8 +20,8 @@ def _do_generate_c_source(args):
     else:
         database_name = args.database_name
 
-    filename_h = database_name + '.h'
-    filename_c = database_name + '.c'
+    filename_h = database_name + '.hpp'
+    filename_c = database_name + '.cpp'
     fuzzer_filename_c = database_name + '_fuzzer.c'
     fuzzer_filename_mk = database_name + '_fuzzer.mk'
 
