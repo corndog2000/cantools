@@ -5,7 +5,7 @@ from decimal import Decimal
 from ...version import __version__
 
 
-HEADER_FMT = '''\
+HEADER_FMT = """\
 /**
  * The MIT License (MIT)
  *
@@ -47,6 +47,7 @@ extern "C" {{
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "canstruct.h"
 
 #ifndef EINVAL
 #    define EINVAL 22
@@ -67,10 +68,6 @@ extern "C" {{
 /* Signal choices. */
 {choices_defines}
 
-struct CAN_STRUCT {{
-    virtual int pack(uint8_t *dst_p, size_t size);
-    virtual int unpack(const uint8_t *dst_p, size_t size);
-}};
 
 {structs}
 
@@ -79,9 +76,9 @@ struct CAN_STRUCT {{
 #endif
 
 #endif
-'''
+"""
 
-SOURCE_FMT = '''\
+SOURCE_FMT = """\
 /**
  * The MIT License (MIT)
  *
@@ -118,9 +115,9 @@ SOURCE_FMT = '''\
 
 {helpers}\
 {definitions}\
-'''
+"""
 
-FUZZER_SOURCE_FMT = '''\
+FUZZER_SOURCE_FMT = """\
 /**
  * The MIT License (MIT)
  *
@@ -219,9 +216,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *data_p, size_t size)
 
     return (0);
 }}
-'''
+"""
 
-FUZZER_MAKEFILE_FMT = '''\
+FUZZER_MAKEFILE_FMT = """\
 #
 # The MIT License (MIT)
 #
@@ -276,9 +273,9 @@ all:
 \tllvm-cov show ./$(EXE) -instr-profile=$(EXE).profdata
 \tllvm-cov report ./$(EXE) -instr-profile=$(EXE).profdata
 
-'''
+"""
 
-TEST_FMT = '''
+TEST_FMT = """
 static void test_{name}(
     const uint8_t *packed_p,
     size_t size)
@@ -326,9 +323,9 @@ static void test_{name}(
         assert_second_pack_data(&packed[0], &packed2[0], res);
     }}
 }}\
-'''
+"""
 
-STRUCT_FMT = '''\
+STRUCT_FMT = """\
 /**
  * Signals in message {database_message_name}.
  *
@@ -337,27 +334,27 @@ STRUCT_FMT = '''\
  */
 struct {database_name}_{message_name}_t:public CAN_STRUCT {{
 {members}
-'''
+"""
 
-ENCODE_DECODE_MEMBERS_FMT = '''\
+ENCODE_DECODE_MEMBERS_FMT = """\
     /**
     * Encode member
     */
-    {type_name} {signal_name}_encode_t(double value);
+    {type_name} {signal_name}_encode();
 
     /**
     * Decode member
     */
-    double {signal_name}_decode_t({type_name} value);
+    double {signal_name}_decode();
 
     /**
     * Is in range member
     */
-    bool {signal_name}_is_in_range_t({type_name} value);
+    bool {signal_name}_is_in_range();
 
-'''
+"""
 
-PACK_UNPACK_MEMEBERS_FMT = '''\
+PACK_UNPACK_MEMEBERS_FMT = """\
     /**
     * Pack member
     */
@@ -367,9 +364,9 @@ PACK_UNPACK_MEMEBERS_FMT = '''\
     * Unpack member
     */
     int unpack(const uint8_t *dst_p, size_t size);
-'''
+"""
 
-DECLARATION_FMT = '''\
+DECLARATION_FMT = """\
 /**
  * Pack message {database_message_name}.
  *
@@ -395,9 +392,9 @@ int {database_name}_{message_name}_t::pack(
 int {database_name}_{message_name}_t::unpack(
     const uint8_t *src_p,
     size_t size);
-'''
+"""
 
-SIGNAL_DECLARATION_ENCODE_DECODE_FMT = '''\
+SIGNAL_DECLARATION_ENCODE_DECODE_FMT = """\
 /**
  * Encode given signal by applying scaling and offset.
  *
@@ -405,7 +402,7 @@ SIGNAL_DECLARATION_ENCODE_DECODE_FMT = '''\
  *
  * @return Encoded signal.
  */
-{type_name} {database_name}_{message_name}_t::{signal_name}_encode_t(double value);
+{type_name} {database_name}_{message_name}_t::{signal_name}_encode();
 
 /**
  * Decode given signal by applying scaling and offset.
@@ -414,11 +411,11 @@ SIGNAL_DECLARATION_ENCODE_DECODE_FMT = '''\
  *
  * @return Decoded signal.
  */
-double {database_name}_{message_name}_t::{signal_name}_decode_t({type_name} value);
+double {database_name}_{message_name}_t::{signal_name}_decode();
 
-'''
+"""
 
-SIGNAL_DECLARATION_IS_IN_RANGE_FMT = '''\
+SIGNAL_DECLARATION_IS_IN_RANGE_FMT = """\
 /**
  * Check that given signal is in allowed range.
  *
@@ -426,10 +423,10 @@ SIGNAL_DECLARATION_IS_IN_RANGE_FMT = '''\
  *
  * @return true if in range, false otherwise.
  */
-bool {database_name}_{message_name}_t::{signal_name}_is_in_range_t({type_name} value);
-'''
+bool {database_name}_{message_name}_t::{signal_name}_is_in_range();
+"""
 
-PACK_HELPER_LEFT_SHIFT_FMT = '''\
+PACK_HELPER_LEFT_SHIFT_FMT = """\
 static inline uint8_t pack_left_shift_u{length}(
     {var_type} value,
     uint8_t shift,
@@ -437,9 +434,9 @@ static inline uint8_t pack_left_shift_u{length}(
 {{
     return (uint8_t)((uint8_t)(value << shift) & mask);
 }}
-'''
+"""
 
-PACK_HELPER_RIGHT_SHIFT_FMT = '''\
+PACK_HELPER_RIGHT_SHIFT_FMT = """\
 static inline uint8_t pack_right_shift_u{length}(
     {var_type} value,
     uint8_t shift,
@@ -447,9 +444,9 @@ static inline uint8_t pack_right_shift_u{length}(
 {{
     return (uint8_t)((uint8_t)(value >> shift) & mask);
 }}
-'''
+"""
 
-UNPACK_HELPER_LEFT_SHIFT_FMT = '''\
+UNPACK_HELPER_LEFT_SHIFT_FMT = """\
 static inline {var_type} unpack_left_shift_u{length}(
     uint8_t value,
     uint8_t shift,
@@ -457,9 +454,9 @@ static inline {var_type} unpack_left_shift_u{length}(
 {{
     return ({var_type})(({var_type})(value & mask) << shift);
 }}
-'''
+"""
 
-UNPACK_HELPER_RIGHT_SHIFT_FMT = '''\
+UNPACK_HELPER_RIGHT_SHIFT_FMT = """\
 static inline {var_type} unpack_right_shift_u{length}(
     uint8_t value,
     uint8_t shift,
@@ -467,9 +464,9 @@ static inline {var_type} unpack_right_shift_u{length}(
 {{
     return ({var_type})(({var_type})(value & mask) >> shift);
 }}
-'''
+"""
 
-DEFINITION_FMT = '''\
+DEFINITION_FMT = """\
 int {database_name}_{message_name}_t::pack(
     uint8_t *dst_p,
     size_t size)
@@ -495,30 +492,30 @@ int {database_name}_{message_name}_t::unpack(
 {unpack_body}
     return (0);
 }}
-'''
+"""
 
-SIGNAL_DEFINITION_ENCODE_DECODE_FMT = '''\
-{type_name} {database_name}_{message_name}_t::{signal_name}_encode_t(double value)
+SIGNAL_DEFINITION_ENCODE_DECODE_FMT = """\
+{type_name} {database_name}_{message_name}_t::{signal_name}_encode()
 {{
     return ({type_name})({encode});
 }}
 
-double {database_name}_{message_name}_t::{signal_name}_decode_t({type_name} value)
+double {database_name}_{message_name}_t::{signal_name}_decode()
 {{
     return ({decode});
 }}
 
-'''
+"""
 
-SIGNAL_DEFINITION_IS_IN_RANGE_FMT = '''\
-bool {database_name}_{message_name}_t::{signal_name}_is_in_range_t({type_name} value)
+SIGNAL_DEFINITION_IS_IN_RANGE_FMT = """\
+bool {database_name}_{message_name}_t::{signal_name}_is_in_range()
 {{
 {unused}\
     return ({check});
 }}
-'''
+"""
 
-EMPTY_DEFINITION_FMT = '''\
+EMPTY_DEFINITION_FMT = """\
 int {database_name}_{message_name}_t::pack(
     uint8_t *dst_p,
     size_t size)
@@ -540,16 +537,16 @@ int {database_name}_{message_name}_t::unpack(
 
     return (0);
 }}
-'''
+"""
 
-SIGN_EXTENSION_FMT = '''
+SIGN_EXTENSION_FMT = """
     if (({name} & (1{suffix} << {shift})) != 0{suffix}) {{
         {name} |= 0x{mask:x}{suffix};
     }}
 
-'''
+"""
 
-SIGNAL_MEMBER_FMT = '''\
+SIGNAL_MEMBER_FMT = """\
     /**
 {comment}\
      * Range: {range}
@@ -557,11 +554,10 @@ SIGNAL_MEMBER_FMT = '''\
      * Offset: {offset}
      */
     {type_name} {name}{length};\
-'''
+"""
 
 
 class Signal(object):
-
     def __init__(self, signal):
         self._signal = signal
         self.snake_name = camel_to_snake_case(self.name)
@@ -571,7 +567,7 @@ class Signal(object):
 
     @property
     def unit(self):
-        return _get(self._signal.unit, '-')
+        return _get(self._signal.unit, "-")
 
     @property
     def type_length(self):
@@ -588,14 +584,14 @@ class Signal(object):
     def type_name(self):
         if self.is_float:
             if self.length == 32:
-                type_name = 'float'
+                type_name = "float"
             else:
-                type_name = 'double'
+                type_name = "double"
         else:
-            type_name = 'int{}_t'.format(self.type_length)
+            type_name = "int{}_t".format(self.type_length)
 
             if not self.is_signed:
-                type_name = 'u' + type_name
+                type_name = "u" + type_name
 
         return type_name
 
@@ -603,27 +599,22 @@ class Signal(object):
     def type_suffix(self):
         try:
             return {
-                'uint8_t': 'u',
-                'uint16_t': 'u',
-                'uint32_t': 'u',
-                'int64_t': 'll',
-                'uint64_t': 'ull',
-                'float': 'f'
+                "uint8_t": "u",
+                "uint16_t": "u",
+                "uint32_t": "u",
+                "int64_t": "ll",
+                "uint64_t": "ull",
+                "float": "f",
             }[self.type_name]
         except KeyError:
-            return ''
+            return ""
 
     @property
     def conversion_type_suffix(self):
         try:
-            return {
-                8: 'u',
-                16: 'u',
-                32: 'u',
-                64: 'ull'
-            }[self.type_length]
+            return {8: "u", 16: "u", 32: "u", 64: "ull"}[self.type_length]
         except KeyError:
-            return ''
+            return ""
 
     @property
     def unique_choices(self):
@@ -637,23 +628,17 @@ class Signal(object):
             for value, name in self.choices.items()
         }
         names = list(items.values())
-        duplicated_names = [
-            name
-            for name in set(names)
-            if names.count(name) > 1
-        ]
+        duplicated_names = [name for name in set(names) if names.count(name) > 1]
         unique_choices = {
-            value: name
-            for value, name in items.items()
-            if names.count(name) == 1
+            value: name for value, name in items.items() if names.count(name) == 1
         }
 
         for value, name in items.items():
             if name in duplicated_names:
-                name += _canonical('_{}'.format(value))
+                name += _canonical("_{}".format(value))
 
                 while name in unique_choices.values():
-                    name += '_'
+                    name += "_"
 
                 unique_choices[value] = name
 
@@ -661,36 +646,36 @@ class Signal(object):
 
     @property
     def minimum_type_value(self):
-        if self.type_name == 'int8_t':
+        if self.type_name == "int8_t":
             return -128
-        elif self.type_name == 'int16_t':
+        elif self.type_name == "int16_t":
             return -32768
-        elif self.type_name == 'int32_t':
+        elif self.type_name == "int32_t":
             return -2147483648
-        elif self.type_name == 'int64_t':
+        elif self.type_name == "int64_t":
             return -9223372036854775808
-        elif self.type_name[0] == 'u':
+        elif self.type_name[0] == "u":
             return 0
         else:
             return None
 
     @property
     def maximum_type_value(self):
-        if self.type_name == 'int8_t':
+        if self.type_name == "int8_t":
             return 127
-        elif self.type_name == 'int16_t':
+        elif self.type_name == "int16_t":
             return 32767
-        elif self.type_name == 'int32_t':
+        elif self.type_name == "int32_t":
             return 2147483647
-        elif self.type_name == 'int64_t':
+        elif self.type_name == "int64_t":
             return 9223372036854775807
-        elif self.type_name == 'uint8_t':
+        elif self.type_name == "uint8_t":
             return 255
-        elif self.type_name == 'uint16_t':
+        elif self.type_name == "uint16_t":
             return 65535
-        elif self.type_name == 'uint32_t':
+        elif self.type_name == "uint32_t":
             return 4294967295
-        elif self.type_name == 'uint64_t':
+        elif self.type_name == "uint64_t":
             return 18446744073709551615
         else:
             return None
@@ -709,51 +694,51 @@ class Signal(object):
         if self.is_float:
             return None
         elif self.is_signed:
-            return ((2 ** (self.length - 1)) - 1)
+            return (2 ** (self.length - 1)) - 1
         else:
-            return ((2 ** self.length) - 1)
+            return (2 ** self.length) - 1
 
     def segments(self, invert_shift):
         index, pos = divmod(self.start, 8)
         left = self.length
 
         while left > 0:
-            if self.byte_order == 'big_endian':
+            if self.byte_order == "big_endian":
                 if left >= (pos + 1):
-                    length = (pos + 1)
+                    length = pos + 1
                     pos = 7
                     shift = -(left - length)
-                    mask = ((1 << length) - 1)
+                    mask = (1 << length) - 1
                 else:
                     length = left
-                    shift = (pos - length + 1)
-                    mask = ((1 << length) - 1)
-                    mask <<= (pos - length + 1)
+                    shift = pos - length + 1
+                    mask = (1 << length) - 1
+                    mask <<= pos - length + 1
             else:
                 shift = (left - self.length) + pos
 
                 if left >= (8 - pos):
-                    length = (8 - pos)
-                    mask = ((1 << length) - 1)
+                    length = 8 - pos
+                    mask = (1 << length) - 1
                     mask <<= pos
                     pos = 0
                 else:
                     length = left
-                    mask = ((1 << length) - 1)
+                    mask = (1 << length) - 1
                     mask <<= pos
 
             if invert_shift:
                 if shift < 0:
                     shift = -shift
-                    shift_direction = 'left'
+                    shift_direction = "left"
                 else:
-                    shift_direction = 'right'
+                    shift_direction = "right"
             else:
                 if shift < 0:
                     shift = -shift
-                    shift_direction = 'right'
+                    shift_direction = "right"
                 else:
-                    shift_direction = 'left'
+                    shift_direction = "left"
 
             yield index, shift, shift_direction, mask
 
@@ -762,11 +747,10 @@ class Signal(object):
 
 
 class Message(object):
-
     def __init__(self, message):
         self._message = message
         self.snake_name = camel_to_snake_case(self.name)
-        self.signals = [Signal(signal)for signal in message.signals]
+        self.signals = [Signal(signal) for signal in message.signals]
 
     def __getattr__(self, name):
         return getattr(self._message, name)
@@ -778,17 +762,15 @@ class Message(object):
 
 
 def _canonical(value):
-    """Replace anything but 'a-z', 'A-Z' and '0-9' with '_'.
+    """Replace anything but 'a-z', 'A-Z' and '0-9' with '_'."""
 
-    """
-
-    return re.sub(r'[^a-zA-Z0-9]', '_', value)
+    return re.sub(r"[^a-zA-Z0-9]", "_", value)
 
 
 def camel_to_snake_case(value):
-    value = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', value)
-    value = re.sub(r'(_+)', '_', value)
-    value = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', value).lower()
+    value = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", value)
+    value = re.sub(r"(_+)", "_", value)
+    value = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", value).lower()
     value = _canonical(value)
 
     return value
@@ -796,10 +778,10 @@ def camel_to_snake_case(value):
 
 def _strip_blank_lines(lines):
     try:
-        while lines[0] == '':
+        while lines[0] == "":
             lines = lines[1:]
 
-        while lines[-1] == '':
+        while lines[-1] == "":
             lines = lines[:-1]
     except IndexError:
         pass
@@ -816,12 +798,12 @@ def _get(value, default):
 
 def _format_comment(comment):
     if comment:
-        return '\n'.join([
-            '     * ' + line.rstrip()
-            for line in comment.splitlines()
-        ]) + '\n     *\n'
+        return (
+            "\n".join(["     * " + line.rstrip() for line in comment.splitlines()])
+            + "\n     *\n"
+        )
     else:
-        return ''
+        return ""
 
 
 def _format_decimal(value, is_float=False):
@@ -829,7 +811,7 @@ def _format_decimal(value, is_float=False):
         value = int(value)
 
         if is_float:
-            return str(value) + '.0'
+            return str(value) + ".0"
         else:
             return str(value)
     else:
@@ -843,323 +825,286 @@ def _format_range(signal):
     offset = signal.decimal.offset
 
     if minimum is not None and maximum is not None:
-        return '{}..{} ({}..{} {})'.format(
+        return "{}..{} ({}..{} {})".format(
             _format_decimal((minimum - offset) / scale),
             _format_decimal((maximum - offset) / scale),
             minimum,
             maximum,
-            signal.unit)
+            signal.unit,
+        )
     elif minimum is not None:
-        return '{}.. ({}.. {})'.format(
-            _format_decimal((minimum - offset) / scale),
-            minimum,
-            signal.unit)
+        return "{}.. ({}.. {})".format(
+            _format_decimal((minimum - offset) / scale), minimum, signal.unit
+        )
     elif maximum is not None:
-        return '..{} (..{} {})'.format(
-            _format_decimal((maximum - offset) / scale),
-            maximum,
-            signal.unit)
+        return "..{} (..{} {})".format(
+            _format_decimal((maximum - offset) / scale), maximum, signal.unit
+        )
     else:
-        return '-'
+        return "-"
 
 
 def _generate_signal(signal, bit_fields):
     comment = _format_comment(signal.comment)
     range_ = _format_range(signal)
-    scale = _get(signal.scale, '-')
-    offset = _get(signal.offset, '-')
+    scale = _get(signal.scale, "-")
+    offset = _get(signal.offset, "-")
 
     if signal.is_float or not bit_fields:
-        length = ''
+        length = ""
     else:
-        length = ' : {}'.format(signal.length)
+        length = " : {}".format(signal.length)
 
-    member = SIGNAL_MEMBER_FMT.format(comment=comment,
-                                      range=range_,
-                                      scale=scale,
-                                      offset=offset,
-                                      type_name=signal.type_name,
-                                      name=signal.snake_name,
-                                      length=length)
+    member = SIGNAL_MEMBER_FMT.format(
+        comment=comment,
+        range=range_,
+        scale=scale,
+        offset=offset,
+        type_name=signal.type_name,
+        name=signal.snake_name,
+        length=length,
+    )
 
     return member
 
 
-def _format_pack_code_mux(message,
-                          mux,
-                          body_lines_per_index,
-                          variable_lines,
-                          helper_kinds):
+def _format_pack_code_mux(
+    message, mux, body_lines_per_index, variable_lines, helper_kinds
+):
     signal_name, multiplexed_signals = list(mux.items())[0]
-    _format_pack_code_signal(message,
-                             signal_name,
-                             body_lines_per_index,
-                             variable_lines,
-                             helper_kinds)
+    _format_pack_code_signal(
+        message, signal_name, body_lines_per_index, variable_lines, helper_kinds
+    )
     multiplexed_signals_per_id = sorted(list(multiplexed_signals.items()))
     signal_name = camel_to_snake_case(signal_name)
 
-    '''
+    """
     lines = [
         '',
         'switch (src_p->{}) {{'.format(signal_name)
     ]
-    '''
+    """
 
-    lines = ['']
+    lines = [""]
 
     for multiplexer_id, multiplexed_signals in multiplexed_signals_per_id:
-        body_lines = _format_pack_code_level(message,
-                                             multiplexed_signals,
-                                             variable_lines,
-                                             helper_kinds)
-        lines.append('')
-        lines.append('case {}:'.format(multiplexer_id))
+        body_lines = _format_pack_code_level(
+            message, multiplexed_signals, variable_lines, helper_kinds
+        )
+        lines.append("")
+        lines.append("case {}:".format(multiplexer_id))
 
         if body_lines:
             lines.extend(body_lines[1:-1])
 
-        lines.append('    break;')
+        lines.append("    break;")
 
-    lines.extend([
-        '',
-        'default:',
-        '    break;',
-        '}'])
+    lines.extend(["", "default:", "    break;", "}"])
 
-    return [('    ' + line).rstrip() for line in lines]
+    return [("    " + line).rstrip() for line in lines]
 
 
-def _format_pack_code_signal(message,
-                             signal_name,
-                             body_lines,
-                             variable_lines,
-                             helper_kinds):
+def _format_pack_code_signal(
+    message, signal_name, body_lines, variable_lines, helper_kinds
+):
     signal = message.get_signal_by_name(signal_name)
 
+    '''
     if signal.is_float or signal.is_signed:
-        variable = '    uint{}_t {};'.format(signal.type_length,
-                                             signal.snake_name)
-        '''
+        variable = "    uint{}_t {};".format(signal.type_length, signal.snake_name)
+
         if signal.is_float:
-            conversion = '    memcpy(&{0}, &src_p->{0}, sizeof({0}));'.format(
-                signal.snake_name)
+            conversion = "    memcpy(&{0}, &src_p->{0}, sizeof({0}));".format(
+                signal.snake_name
+            )
         else:
-            conversion = '    {0} = (uint{1}_t)src_p->{0};'.format(
-                signal.snake_name,
-                signal.type_length)
-        '''
+            conversion = "    {0} = (uint{1}_t)src_p->{0};".format(
+                signal.snake_name, signal.type_length
+            )
 
         variable_lines.append(variable)
-        #body_lines.append(conversion)
+        body_lines.append(conversion)
     '''
     for index, shift, shift_direction, mask in signal.segments(invert_shift=False):
+        fmt = "    dst_p[{}] |= pack_{}_shift_u{}({}, {}u, 0x{:02x}u);"
+        '''
         if signal.is_float or signal.is_signed:
-            fmt = '    dst_p[{}] |= pack_{}_shift_u{}({}, {}u, 0x{:02x}u);'
+            fmt = "    dst_p[{}] |= pack_{}_shift_u{}({}, {}u, 0x{:02x}u);"
         else:
-            fmt = '    dst_p[{}] |= pack_{}_shift_u{}(src_p->{}, {}u, 0x{:02x}u);'
-
-        line = fmt.format(index,
-                          shift_direction,
-                          signal.type_length,
-                          signal.snake_name,
-                          shift,
-                          mask)
+            fmt = "    dst_p[{}] |= pack_{}_shift_u{}(src_p->{}, {}u, 0x{:02x}u);"
+        '''
+        line = fmt.format(
+            index, shift_direction, signal.type_length, signal.snake_name, shift, mask
+        )
         body_lines.append(line)
         helper_kinds.add((shift_direction, signal.type_length))
-    '''
 
 
-def _format_pack_code_level(message,
-                            signal_names,
-                            variable_lines,
-                            helper_kinds):
-    """Format one pack level in a signal tree.
-
-    """
+def _format_pack_code_level(message, signal_names, variable_lines, helper_kinds):
+    """Format one pack level in a signal tree."""
 
     body_lines = []
     muxes_lines = []
 
     for signal_name in signal_names:
         if isinstance(signal_name, dict):
-            mux_lines = _format_pack_code_mux(message,
-                                              signal_name,
-                                              body_lines,
-                                              variable_lines,
-                                              helper_kinds)
+            mux_lines = _format_pack_code_mux(
+                message, signal_name, body_lines, variable_lines, helper_kinds
+            )
             muxes_lines += mux_lines
         else:
-            _format_pack_code_signal(message,
-                                     signal_name,
-                                     body_lines,
-                                     variable_lines,
-                                     helper_kinds)
+            _format_pack_code_signal(
+                message, signal_name, body_lines, variable_lines, helper_kinds
+            )
 
     body_lines = body_lines + muxes_lines
 
     if body_lines:
-        body_lines = [''] + body_lines + ['']
+        body_lines = [""] + body_lines + [""]
 
     return body_lines
 
 
 def _format_pack_code(message, helper_kinds):
     variable_lines = []
-    body_lines = _format_pack_code_level(message,
-                                         message.signal_tree,
-                                         variable_lines,
-                                         helper_kinds)
+    body_lines = _format_pack_code_level(
+        message, message.signal_tree, variable_lines, helper_kinds
+    )
 
     if variable_lines:
-        variable_lines = sorted(list(set(variable_lines))) + ['', '']
+        variable_lines = sorted(list(set(variable_lines))) + ["", ""]
 
-    return '\n'.join(variable_lines), '\n'.join(body_lines)
+    return "\n".join(variable_lines), "\n".join(body_lines)
 
 
-def _format_unpack_code_mux(message,
-                            mux,
-                            body_lines_per_index,
-                            variable_lines,
-                            helper_kinds):
+def _format_unpack_code_mux(
+    message, mux, body_lines_per_index, variable_lines, helper_kinds
+):
     signal_name, multiplexed_signals = list(mux.items())[0]
-    _format_unpack_code_signal(message,
-                               signal_name,
-                               body_lines_per_index,
-                               variable_lines,
-                               helper_kinds)
+    _format_unpack_code_signal(
+        message, signal_name, body_lines_per_index, variable_lines, helper_kinds
+    )
     multiplexed_signals_per_id = sorted(list(multiplexed_signals.items()))
     signal_name = camel_to_snake_case(signal_name)
 
-    lines = [
-        'switch (dst_p->{}) {{'.format(signal_name)
-    ]
+    lines = ["switch (dst_p->{}) {{".format(signal_name)]
 
     for multiplexer_id, multiplexed_signals in multiplexed_signals_per_id:
-        body_lines = _format_unpack_code_level(message,
-                                               multiplexed_signals,
-                                               variable_lines,
-                                               helper_kinds)
-        lines.append('')
-        lines.append('case {}:'.format(multiplexer_id))
+        body_lines = _format_unpack_code_level(
+            message, multiplexed_signals, variable_lines, helper_kinds
+        )
+        lines.append("")
+        lines.append("case {}:".format(multiplexer_id))
         lines.extend(_strip_blank_lines(body_lines))
-        lines.append('    break;')
+        lines.append("    break;")
 
-    lines.extend([
-        '',
-        'default:',
-        '    break;',
-        '}'])
+    lines.extend(["", "default:", "    break;", "}"])
 
-    return [('    ' + line).rstrip() for line in lines]
+    return [("    " + line).rstrip() for line in lines]
 
 
-def _format_unpack_code_signal(message,
-                               signal_name,
-                               body_lines,
-                               variable_lines,
-                               helper_kinds):
+def _format_unpack_code_signal(
+    message, signal_name, body_lines, variable_lines, helper_kinds
+):
     signal = message.get_signal_by_name(signal_name)
-    conversion_type_name = 'uint{}_t'.format(signal.type_length)
+    conversion_type_name = "uint{}_t".format(signal.type_length)
 
     if signal.is_float or signal.is_signed:
-        variable = '    {} {};'.format(conversion_type_name, signal.snake_name)
+        variable = "    {} {};".format(conversion_type_name, signal.snake_name)
         variable_lines.append(variable)
 
     segments = signal.segments(invert_shift=True)
-    '''
+
     for i, (index, shift, shift_direction, mask) in enumerate(segments):
+        fmt = "    {} {} unpack_{}_shift_u{}(src_p[{}], {}u, 0x{:02x}u);"
+        """
         if signal.is_float or signal.is_signed:
             fmt = '    {} {} unpack_{}_shift_u{}(src_p[{}], {}u, 0x{:02x}u);'
         else:
             fmt = '    dst_p->{} {} unpack_{}_shift_u{}(src_p[{}], {}u, 0x{:02x}u);'
-
-        line = fmt.format(signal.snake_name,
-                          '=' if i == 0 else '|=',
-                          shift_direction,
-                          signal.type_length,
-                          index,
-                          shift,
-                          mask)
+        """
+        line = fmt.format(
+            signal.snake_name,
+            "=" if i == 0 else "|=",
+            shift_direction,
+            signal.type_length,
+            index,
+            shift,
+            mask,
+        )
         body_lines.append(line)
         helper_kinds.add((shift_direction, signal.type_length))
 
     if signal.is_float:
-        conversion = '    memcpy(&dst_p->{0}, &{0}, sizeof(dst_p->{0}));'.format(
-            signal.snake_name)
+        conversion = "    memcpy(&dst_p->{0}, &{0}, sizeof(dst_p->{0}));".format(
+            signal.snake_name
+        )
         body_lines.append(conversion)
     elif signal.is_signed:
-        mask = ((1 << (signal.type_length - signal.length)) - 1)
+        mask = (1 << (signal.type_length - signal.length)) - 1
 
         if mask != 0:
             mask <<= signal.length
-            formatted = SIGN_EXTENSION_FMT.format(name=signal.snake_name,
-                                                  shift=signal.length - 1,
-                                                  mask=mask,
-                                                  suffix=signal.conversion_type_suffix)
+            formatted = SIGN_EXTENSION_FMT.format(
+                name=signal.snake_name,
+                shift=signal.length - 1,
+                mask=mask,
+                suffix=signal.conversion_type_suffix,
+            )
             body_lines.extend(formatted.splitlines())
-
-        conversion = '    dst_p->{0} = (int{1}_t){0};'.format(signal.snake_name,
-                                                              signal.type_length)
+        '''
+        conversion = "    dst_p->{0} = (int{1}_t){0};".format(
+            signal.snake_name, signal.type_length
+        )
         body_lines.append(conversion)
-    '''
+        '''
 
-def _format_unpack_code_level(message,
-                              signal_names,
-                              variable_lines,
-                              helper_kinds):
-    """Format one unpack level in a signal tree.
-
-    """
+def _format_unpack_code_level(message, signal_names, variable_lines, helper_kinds):
+    """Format one unpack level in a signal tree."""
 
     body_lines = []
     muxes_lines = []
 
     for signal_name in signal_names:
         if isinstance(signal_name, dict):
-            mux_lines = _format_unpack_code_mux(message,
-                                                signal_name,
-                                                body_lines,
-                                                variable_lines,
-                                                helper_kinds)
+            mux_lines = _format_unpack_code_mux(
+                message, signal_name, body_lines, variable_lines, helper_kinds
+            )
 
             if muxes_lines:
-                muxes_lines.append('')
+                muxes_lines.append("")
 
             muxes_lines += mux_lines
         else:
-            _format_unpack_code_signal(message,
-                                       signal_name,
-                                       body_lines,
-                                       variable_lines,
-                                       helper_kinds)
+            _format_unpack_code_signal(
+                message, signal_name, body_lines, variable_lines, helper_kinds
+            )
 
     if body_lines:
-        if body_lines[-1] != '':
-            body_lines.append('')
+        if body_lines[-1] != "":
+            body_lines.append("")
 
     if muxes_lines:
-        muxes_lines.append('')
+        muxes_lines.append("")
 
     body_lines = body_lines + muxes_lines
 
     if body_lines:
-        body_lines = [''] + body_lines
+        body_lines = [""] + body_lines
 
     return body_lines
 
 
 def _format_unpack_code(message, helper_kinds):
     variable_lines = []
-    body_lines = _format_unpack_code_level(message,
-                                           message.signal_tree,
-                                           variable_lines,
-                                           helper_kinds)
+    body_lines = _format_unpack_code_level(
+        message, message.signal_tree, variable_lines, helper_kinds
+    )
 
     if variable_lines:
-        variable_lines = sorted(list(set(variable_lines))) + ['', '']
+        variable_lines = sorted(list(set(variable_lines))) + ["", ""]
 
-    return '\n'.join(variable_lines), '\n'.join(body_lines)
+    return "\n".join(variable_lines), "\n".join(body_lines)
 
 
 def _generate_struct(message, bit_fields):
@@ -1170,16 +1115,16 @@ def _generate_struct(message, bit_fields):
 
     if not members:
         members = [
-            '    /**\n'
-            '     * Dummy signal in empty message.\n'
-            '     */\n'
-            '    uint8_t dummy;'
+            "    /**\n"
+            "     * Dummy signal in empty message.\n"
+            "     */\n"
+            "    uint8_t dummy;"
         ]
 
     if message.comment is None:
-        comment = ''
+        comment = ""
     else:
-        comment = ' * {}\n *\n'.format(message.comment)
+        comment = " * {}\n *\n".format(message.comment)
 
     return comment, members
 
@@ -1189,13 +1134,13 @@ def _format_choices(signal, signal_name):
 
     for value, name in sorted(signal.unique_choices.items()):
         if signal.is_signed:
-            fmt = '{signal_name}_{name}_CHOICE ({value})'
+            fmt = "{signal_name}_{name}_CHOICE ({value})"
         else:
-            fmt = '{signal_name}_{name}_CHOICE ({value}u)'
+            fmt = "{signal_name}_{name}_CHOICE ({value}u)"
 
-        choices.append(fmt.format(signal_name=signal_name.upper(),
-                                  name=str(name),
-                                  value=value))
+        choices.append(
+            fmt.format(signal_name=signal_name.upper(), name=str(name), value=value)
+        )
 
     return choices
 
@@ -1210,19 +1155,19 @@ def _generate_encode_decode(message):
         formatted_offset = _format_decimal(offset, is_float=True)
 
         if offset == 0 and scale == 1:
-            encoding = 'value'
-            decoding = '(double)value'
+            encoding = "{}".format(signal.snake_name)
+            decoding = "(double){}".format(signal.snake_name)
         elif offset != 0 and scale != 1:
-            encoding = '(value - {}) / {}'.format(formatted_offset,
-                                                  formatted_scale)
-            decoding = '((double)value * {}) + {}'.format(formatted_scale,
-                                                          formatted_offset)
+            encoding = "({} - {}) / {}".format(signal.snake_name, formatted_offset, formatted_scale)
+            decoding = "((double){} * {}) + {}".format(signal.snake_name, 
+                formatted_scale, formatted_offset
+            )
         elif offset != 0:
-            encoding = 'value - {}'.format(formatted_offset)
-            decoding = '(double)value + {}'.format(formatted_offset)
+            encoding = "{} - {}".format(signal.snake_name, formatted_offset)
+            decoding = "(double){} + {}".format(signal.snake_name, formatted_offset)
         else:
-            encoding = 'value / {}'.format(formatted_scale)
-            decoding = '(double)value * {}'.format(formatted_scale)
+            encoding = "{} / {}".format(signal.snake_name, formatted_scale)
+            decoding = "(double){} * {}".format(signal.snake_name, formatted_scale)
 
         encode_decode.append((encoding, decoding))
 
@@ -1230,23 +1175,21 @@ def _generate_encode_decode(message):
 
 
 def _generate_is_in_range(message):
-    """Generate range checks for all signals in given message.
-
-    """
+    """Generate range checks for all signals in given message."""
 
     checks = []
 
     for signal in message.signals:
         scale = signal.decimal.scale
-        offset = (signal.decimal.offset / scale)
+        offset = signal.decimal.offset / scale
         minimum = signal.decimal.minimum
         maximum = signal.decimal.maximum
 
         if minimum is not None:
-            minimum = (minimum / scale - offset)
+            minimum = minimum / scale - offset
 
         if maximum is not None:
-            maximum = (maximum / scale - offset)
+            maximum = maximum / scale - offset
 
         if minimum is None and signal.minimum_value is not None:
             if signal.minimum_value > signal.minimum_type_value:
@@ -1267,7 +1210,7 @@ def _generate_is_in_range(message):
 
             if (minimum_type_value is None) or (minimum > minimum_type_value):
                 minimum = _format_decimal(minimum, signal.is_float)
-                check.append('(value >= {}{})'.format(minimum, suffix))
+                check.append("({} >= {}{})".format(signal.snake_name, minimum, suffix))
 
         if maximum is not None:
             if not signal.is_float:
@@ -1277,14 +1220,14 @@ def _generate_is_in_range(message):
 
             if (maximum_type_value is None) or (maximum < maximum_type_value):
                 maximum = _format_decimal(maximum, signal.is_float)
-                check.append('(value <= {}{})'.format(maximum, suffix))
+                check.append("({} <= {}{})".format(signal.snake_name, maximum, suffix))
 
         if not check:
-            check = ['true']
+            check = ["true"]
         elif len(check) == 1:
             check = [check[0][1:-1]]
 
-        check = ' && '.join(check)
+        check = " && ".join(check)
 
         checks.append(check)
 
@@ -1292,47 +1235,54 @@ def _generate_is_in_range(message):
 
 
 def _generate_frame_id_defines(database_name, messages):
-    return '\n'.join([
-        '#define {}_{}_FRAME_ID (0x{:02x}u)'.format(
-            database_name.upper(),
-            message.snake_name.upper(),
-            message.frame_id)
-        for message in messages
-    ])
+    return "\n".join(
+        [
+            "#define {}_{}_FRAME_ID (0x{:02x}u)".format(
+                database_name.upper(), message.snake_name.upper(), message.frame_id
+            )
+            for message in messages
+        ]
+    )
 
 
 def _generate_frame_length_defines(database_name, messages):
-    result = '\n'.join([
-        '#define {}_{}_LENGTH ({}u)'.format(
-            database_name.upper(),
-            message.snake_name.upper(),
-            message.length)
-        for message in messages
-    ])
+    result = "\n".join(
+        [
+            "#define {}_{}_LENGTH ({}u)".format(
+                database_name.upper(), message.snake_name.upper(), message.length
+            )
+            for message in messages
+        ]
+    )
 
     return result
 
 
 def _generate_frame_cycle_time_defines(database_name, messages):
-    result = '\n'.join([
-        '#define {}_{}_CYCLE_TIME_MS ({}u)'.format(
-            database_name.upper(),
-            message.snake_name.upper(),
-            message.cycle_time)
-        for message in messages if message.cycle_time is not None
-    ])
+    result = "\n".join(
+        [
+            "#define {}_{}_CYCLE_TIME_MS ({}u)".format(
+                database_name.upper(), message.snake_name.upper(), message.cycle_time
+            )
+            for message in messages
+            if message.cycle_time is not None
+        ]
+    )
 
     return result
 
 
 def _generate_is_extended_frame_defines(database_name, messages):
-    result = '\n'.join([
-        '#define {}_{}_IS_EXTENDED ({})'.format(
-            database_name.upper(),
-            message.snake_name.upper(),
-            int(message.is_extended_frame))
-        for message in messages
-    ])
+    result = "\n".join(
+        [
+            "#define {}_{}_IS_EXTENDED ({})".format(
+                database_name.upper(),
+                message.snake_name.upper(),
+                int(message.is_extended_frame),
+            )
+            for message in messages
+        ]
+    )
 
     return result
 
@@ -1346,15 +1296,17 @@ def _generate_choices_defines(database_name, messages):
                 continue
 
             choices = _format_choices(signal, signal.snake_name)
-            signal_choices_defines = '\n'.join([
-                '#define {}_{}_{}'.format(database_name.upper(),
-                                          message.snake_name.upper(),
-                                          choice)
-                for choice in choices
-            ])
+            signal_choices_defines = "\n".join(
+                [
+                    "#define {}_{}_{}".format(
+                        database_name.upper(), message.snake_name.upper(), choice
+                    )
+                    for choice in choices
+                ]
+            )
             choices_defines.append(signal_choices_defines)
 
-    return '\n\n'.join(choices_defines)
+    return "\n\n".join(choices_defines)
 
 
 def _generate_structs(database_name, messages, bit_fields):
@@ -1363,62 +1315,67 @@ def _generate_structs(database_name, messages, bit_fields):
     for message in messages:
         comment, members = _generate_struct(message, bit_fields)
         structs.append(
-            STRUCT_FMT.format(comment=comment,
-                              database_message_name=message.name,
-                              message_name=message.snake_name,
-                              database_name=database_name,
-                              members='\n\n'.join(members)))
-        
+            STRUCT_FMT.format(
+                comment=comment,
+                database_message_name=message.name,
+                message_name=message.snake_name,
+                database_name=database_name,
+                members="\n\n".join(members),
+            )
+        )
+
         # Joe Code
         for signal in message.signals:
-            structs.append(ENCODE_DECODE_MEMBERS_FMT.format(type_name = signal.type_name,
-                                                        signal_name = signal.snake_name))
+            structs.append(
+                ENCODE_DECODE_MEMBERS_FMT.format(
+                    type_name=signal.type_name, signal_name=signal.snake_name
+                )
+            )
         structs.append(PACK_UNPACK_MEMEBERS_FMT)
-            
-        structs.append('};')
 
-    return '\n'.join(structs)
+        structs.append("};")
+
+    return "\n".join(structs)
 
 
 def _generate_declarations(database_name, messages, floating_point_numbers):
     declarations = []
-    
+
     for message in messages:
         signal_declarations = []
 
-        
         for signal in message.signals:
-            signal_declaration = ''
+            signal_declaration = ""
 
-            
             if floating_point_numbers:
                 signal_declaration = SIGNAL_DECLARATION_ENCODE_DECODE_FMT.format(
                     database_name=database_name,
                     message_name=message.snake_name,
                     signal_name=signal.snake_name,
-                    type_name=signal.type_name)
-            
-            
+                    type_name=signal.type_name,
+                )
+
             signal_declaration += SIGNAL_DECLARATION_IS_IN_RANGE_FMT.format(
                 database_name=database_name,
                 message_name=message.snake_name,
                 signal_name=signal.snake_name,
-                type_name=signal.type_name)
-            
+                type_name=signal.type_name,
+            )
 
             signal_declarations.append(signal_declaration)
-        
 
-        declaration = DECLARATION_FMT.format(database_name=database_name,
-                                             database_message_name=message.name,
-                                             message_name=message.snake_name)
-        
+        declaration = DECLARATION_FMT.format(
+            database_name=database_name,
+            database_message_name=message.name,
+            message_name=message.snake_name,
+        )
+
         if signal_declarations:
-            declaration += '\n' + '\n'.join(signal_declarations)
+            declaration += "\n" + "\n".join(signal_declarations)
 
         declarations.append(declaration)
 
-    return '\n'.join(declarations)
+    return "\n".join(declarations)
 
 
 def _generate_definitions(database_name, messages, floating_point_numbers):
@@ -1428,17 +1385,19 @@ def _generate_definitions(database_name, messages, floating_point_numbers):
 
     for message in messages:
         signal_definitions = []
-        
-        for signal, (encode, decode), check in zip(message.signals,
-                                                   _generate_encode_decode(message),
-                                                   _generate_is_in_range(message)):
-            if check == 'true':
-                unused = '    (void)value;\n\n'
-            else:
-                unused = ''
 
-            signal_definition = ''
-            
+        for signal, (encode, decode), check in zip(
+            message.signals,
+            _generate_encode_decode(message),
+            _generate_is_in_range(message),
+        ):
+            if check == "true":
+                unused = "    (void){};\n\n".format(signal.snake_name)
+            else:
+                unused = ""
+
+            signal_definition = ""
+
             if floating_point_numbers:
                 signal_definition = SIGNAL_DEFINITION_ENCODE_DECODE_FMT.format(
                     database_name=database_name,
@@ -1446,7 +1405,8 @@ def _generate_definitions(database_name, messages, floating_point_numbers):
                     signal_name=signal.snake_name,
                     type_name=signal.type_name,
                     encode=encode,
-                    decode=decode)
+                    decode=decode,
+                )
 
             signal_definition += SIGNAL_DEFINITION_IS_IN_RANGE_FMT.format(
                 database_name=database_name,
@@ -1454,118 +1414,120 @@ def _generate_definitions(database_name, messages, floating_point_numbers):
                 signal_name=signal.snake_name,
                 type_name=signal.type_name,
                 unused=unused,
-                check=check)
-            
+                check=check,
+            )
+
             signal_definitions.append(signal_definition)
-        
+
         if message.length > 0:
-            pack_variables, pack_body = _format_pack_code(message,
-                                                          pack_helper_kinds)
-            unpack_variables, unpack_body = _format_unpack_code(message,
-                                                                unpack_helper_kinds)
-            pack_unused = ''
-            unpack_unused = ''
+            pack_variables, pack_body = _format_pack_code(message, pack_helper_kinds)
+            unpack_variables, unpack_body = _format_unpack_code(
+                message, unpack_helper_kinds
+            )
+            pack_unused = ""
+            unpack_unused = ""
 
             if not pack_body:
-                pack_unused += '    (void)src_p;\n\n'
+                pack_unused += "    (void)src_p;\n\n"
 
             if not unpack_body:
-                unpack_unused += '    (void)dst_p;\n'
-                unpack_unused += '    (void)src_p;\n\n'
+                unpack_unused += "    (void)dst_p;\n"
+                unpack_unused += "    (void)src_p;\n\n"
 
-            definition = DEFINITION_FMT.format(database_name=database_name,
-                                               database_message_name=message.name,
-                                               message_name=message.snake_name,
-                                               message_length=message.length,
-                                               pack_unused=pack_unused,
-                                               unpack_unused=unpack_unused,
-                                               pack_variables=pack_variables,
-                                               pack_body=pack_body,
-                                               unpack_variables=unpack_variables,
-                                               unpack_body=unpack_body)
+            definition = DEFINITION_FMT.format(
+                database_name=database_name,
+                database_message_name=message.name,
+                message_name=message.snake_name,
+                message_length=message.length,
+                pack_unused=pack_unused,
+                unpack_unused=unpack_unused,
+                pack_variables=pack_variables,
+                pack_body=pack_body,
+                unpack_variables=unpack_variables,
+                unpack_body=unpack_body,
+            )
         else:
-            definition = EMPTY_DEFINITION_FMT.format(database_name=database_name,
-                                                     message_name=message.snake_name)
+            definition = EMPTY_DEFINITION_FMT.format(
+                database_name=database_name, message_name=message.snake_name
+            )
 
         if signal_definitions:
-            definition += '\n' + '\n'.join(signal_definitions)
+            definition += "\n" + "\n".join(signal_definitions)
 
         definitions.append(definition)
 
-    return '\n'.join(definitions), (pack_helper_kinds, unpack_helper_kinds)
+    return "\n".join(definitions), (pack_helper_kinds, unpack_helper_kinds)
 
 
 def _generate_helpers_kind(kinds, left_format, right_format):
-    formats = {
-        'left': left_format,
-        'right': right_format
-    }
+    formats = {"left": left_format, "right": right_format}
     helpers = []
 
     for shift_direction, length in sorted(kinds):
-        var_type = 'uint{}_t'.format(length)
-        helper = formats[shift_direction].format(length=length,
-                                                 var_type=var_type)
+        var_type = "uint{}_t".format(length)
+        helper = formats[shift_direction].format(length=length, var_type=var_type)
         helpers.append(helper)
 
     return helpers
 
 
 def _generate_helpers(kinds):
-    pack_helpers = _generate_helpers_kind(kinds[0],
-                                          PACK_HELPER_LEFT_SHIFT_FMT,
-                                          PACK_HELPER_RIGHT_SHIFT_FMT)
-    unpack_helpers = _generate_helpers_kind(kinds[1],
-                                            UNPACK_HELPER_LEFT_SHIFT_FMT,
-                                            UNPACK_HELPER_RIGHT_SHIFT_FMT)
+    pack_helpers = _generate_helpers_kind(
+        kinds[0], PACK_HELPER_LEFT_SHIFT_FMT, PACK_HELPER_RIGHT_SHIFT_FMT
+    )
+    unpack_helpers = _generate_helpers_kind(
+        kinds[1], UNPACK_HELPER_LEFT_SHIFT_FMT, UNPACK_HELPER_RIGHT_SHIFT_FMT
+    )
     helpers = pack_helpers + unpack_helpers
 
     if helpers:
-        helpers.append('')
+        helpers.append("")
 
-    return '\n'.join(helpers)
+    return "\n".join(helpers)
 
 
-def _generate_fuzzer_source(database_name,
-                            messages,
-                            date,
-                            header_name,
-                            source_name,
-                            fuzzer_source_name):
+def _generate_fuzzer_source(
+    database_name, messages, date, header_name, source_name, fuzzer_source_name
+):
     tests = []
     calls = []
 
     for message in messages:
-        name = '{}_{}'.format(database_name,
-                              camel_to_snake_case(message.name))
+        name = "{}_{}".format(database_name, camel_to_snake_case(message.name))
 
         test = TEST_FMT.format(name=name)
         tests.append(test)
 
-        call = '    test_{}(data_p, size);'.format(name)
+        call = "    test_{}(data_p, size);".format(name)
         calls.append(call)
 
-    source = FUZZER_SOURCE_FMT.format(version=__version__,
-                                      date=date,
-                                      header=header_name,
-                                      tests='\n'.join(tests),
-                                      llvm_body='\n'.join(calls))
+    source = FUZZER_SOURCE_FMT.format(
+        version=__version__,
+        date=date,
+        header=header_name,
+        tests="\n".join(tests),
+        llvm_body="\n".join(calls),
+    )
 
-    makefile = FUZZER_MAKEFILE_FMT.format(version=__version__,
-                                          date=date,
-                                          source=source_name,
-                                          fuzzer_source=fuzzer_source_name)
+    makefile = FUZZER_MAKEFILE_FMT.format(
+        version=__version__,
+        date=date,
+        source=source_name,
+        fuzzer_source=fuzzer_source_name,
+    )
 
     return source, makefile
 
 
-def generate(database,
-             database_name,
-             header_name,
-             source_name,
-             fuzzer_source_name,
-             floating_point_numbers=True,
-             bit_fields=False):
+def generate(
+    database,
+    database_name,
+    header_name,
+    source_name,
+    fuzzer_source_name,
+    floating_point_numbers=True,
+    bit_fields=False,
+):
     """Generate C source code from given CAN database `database`.
 
     `database_name` is used as a prefix for all defines, data
@@ -1592,46 +1554,45 @@ def generate(database,
 
     date = time.ctime()
     messages = [Message(message) for message in database.messages]
-    include_guard = '{}_H'.format(database_name.upper())
+    include_guard = "{}_H".format(database_name.upper())
     frame_id_defines = _generate_frame_id_defines(database_name, messages)
-    frame_length_defines = _generate_frame_length_defines(database_name,
-                                                          messages)
+    frame_length_defines = _generate_frame_length_defines(database_name, messages)
     is_extended_frame_defines = _generate_is_extended_frame_defines(
-        database_name,
-        messages)
+        database_name, messages
+    )
     frame_cycle_time_defines = _generate_frame_cycle_time_defines(
-        database_name,
-        messages)
+        database_name, messages
+    )
     choices_defines = _generate_choices_defines(database_name, messages)
     structs = _generate_structs(database_name, messages, bit_fields)
-    
-    definitions, helper_kinds = _generate_definitions(database_name,
-                                                      messages,
-                                                      floating_point_numbers)
+
+    definitions, helper_kinds = _generate_definitions(
+        database_name, messages, floating_point_numbers
+    )
     helpers = _generate_helpers(helper_kinds)
 
-    header = HEADER_FMT.format(version=__version__,
-                               date=date,
-                               include_guard=include_guard,
-                               frame_id_defines=frame_id_defines,
-                               frame_length_defines=frame_length_defines,
-                               is_extended_frame_defines=is_extended_frame_defines,
-                               frame_cycle_time_defines=frame_cycle_time_defines,
-                               choices_defines=choices_defines,
-                               structs=structs)
+    header = HEADER_FMT.format(
+        version=__version__,
+        date=date,
+        include_guard=include_guard,
+        frame_id_defines=frame_id_defines,
+        frame_length_defines=frame_length_defines,
+        is_extended_frame_defines=is_extended_frame_defines,
+        frame_cycle_time_defines=frame_cycle_time_defines,
+        choices_defines=choices_defines,
+        structs=structs,
+    )
 
-    source = SOURCE_FMT.format(version=__version__,
-                               date=date,
-                               header=header_name,
-                               helpers=helpers,
-                               definitions=definitions)
+    source = SOURCE_FMT.format(
+        version=__version__,
+        date=date,
+        header=header_name,
+        helpers=helpers,
+        definitions=definitions,
+    )
 
     fuzzer_source, fuzzer_makefile = _generate_fuzzer_source(
-        database_name,
-        messages,
-        date,
-        header_name,
-        source_name,
-        fuzzer_source_name)
+        database_name, messages, date, header_name, source_name, fuzzer_source_name
+    )
 
     return header, source, fuzzer_source, fuzzer_makefile
